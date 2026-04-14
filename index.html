@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>情绪气候站 | Emotion Weather Station</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题 -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">情绪气候站</h1>
+                <p class="app-subtitle">你的个人情绪气象台</p>
+                <div class="current-time" id="current-time"></div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 今日页面 (默认显示) -->
+            <section id="today-page" class="page active">
+                <!-- 情绪输入部分 -->
+                <div class="section emotion-input-section">
+                    <h2 class="section-title">今天你的情绪天气如何？</h2>
+                    <p class="section-subtitle">选择主要情绪状态</p>
+
+                    <div class="emotion-buttons-grid">
+                        <button class="emotion-btn anxiety" data-emotion="anxiety">
+                            <div class="emotion-icon">🌩️</div>
+                            <div class="emotion-label">焦虑</div>
+                            <div class="emotion-sub">Thunderstorm Anxiety</div>
+                        </button>
+
+                        <button class="emotion-btn emptiness" data-emotion="emptiness">
+                            <div class="emotion-icon">🌫️</div>
+                            <div class="emotion-label">空虚</div>
+                            <div class="emotion-sub">Low-Pressure Emptiness</div>
+                        </button>
+
+                        <button class="emotion-btn irritability" data-emotion="irritability">
+                            <div class="emotion-icon">🌬️</div>
+                            <div class="emotion-label">烦躁</div>
+                            <div class="emotion-sub">Runaway Wind</div>
+                        </button>
+
+                        <button class="emotion-btn burnout" data-emotion="burnout">
+                            <div class="emotion-icon">🌧️</div>
+                            <div class="emotion-label">倦怠</div>
+                            <div class="emotion-sub">Persistent Overcast</div>
+                        </button>
+                    </div>
+
+                    <div class="free-text-section">
+                        <h3 class="free-text-title">自由记录（可选）</h3>
+                        <textarea class="free-text-input" id="free-text-input" placeholder="写下此刻的感受..."></textarea>
+                    </div>
+                </div>
+
+                <!-- 天气报告卡片 (初始隐藏) -->
+                <div class="section weather-report-section hidden" id="weather-report-section">
+                    <h2 class="section-title">情绪气候报告</h2>
+
+                    <div class="weather-card" id="weather-card">
+                        <!-- 动态生成天气卡片 -->
+                    </div>
+
+                    <div class="intensity-section">
+                        <h3 class="intensity-title">气候强度</h3>
+                        <div class="intensity-meter">
+                            <div class="intensity-scale">
+                                <button class="intensity-level" data-level="1">1</button>
+                                <button class="intensity-level" data-level="2">2</button>
+                                <button class="intensity-level" data-level="3">3</button>
+                                <button class="intensity-level" data-level="4">4</button>
+                                <button class="intensity-level" data-level="5">5</button>
+                            </div>
+                            <div class="intensity-labels">
+                                <span>轻微</span>
+                                <span>中度</span>
+                                <span>强烈</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="forecast-tip" id="forecast-tip">
+                        <!-- 动态生成预报提示 -->
+                    </div>
+                </div>
+
+                <!-- 干预面板 (初始隐藏) -->
+                <div class="section intervention-section hidden" id="intervention-section">
+                    <h2 class="section-title">气候干预方案</h2>
+                    <p class="section-subtitle">选择适合你的调节方式</p>
+
+                    <div class="intervention-grid">
+                        <!-- 声音推荐 -->
+                        <div class="intervention-card sound-card">
+                            <div class="intervention-icon">🎵</div>
+                            <h3 class="intervention-title">声音推荐</h3>
+                            <div class="sound-options">
+                                <button class="sound-option active" data-sound="rain">
+                                    <div class="sound-icon">🌧️</div>
+                                    <div class="sound-label">雨声</div>
+                                </button>
+                                <button class="sound-option" data-sound="white-noise">
+                                    <div class="sound-icon">📻</div>
+                                    <div class="sound-label">电台白噪音</div>
+                                </button>
+                                <button class="sound-option" data-sound="whisper">
+                                    <div class="sound-icon">👥</div>
+                                    <div class="sound-label">低语人声</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 微行为 -->
+                        <div class="intervention-card action-card">
+                            <div class="intervention-icon">🚶</div>
+                            <h3 class="intervention-title">微行为</h3>
+                            <div class="action-prompt" id="action-prompt">
+                                慢慢走去倒一杯水，感受杯子的温度
+                            </div>
+                            <button class="refresh-action-btn" id="refresh-action-btn">
+                                <i class="fas fa-redo"></i> 换一个建议
+                            </button>
+                        </div>
+
+                        <!-- 呼吸引导 -->
+                        <div class="intervention-card breathing-card">
+                            <div class="intervention-icon">🌊</div>
+                            <h3 class="intervention-title">呼吸引导</h3>
+                            <div class="breathing-animation">
+                                <svg class="breathing-wave" id="breathing-wave" viewBox="0 0 400 100">
+                                    <!-- 动态生成呼吸波浪 -->
+                                </svg>
+                                <div class="breathing-text" id="breathing-text">吸气...</div>
+                            </div>
+                            <button class="start-breathing-btn" id="start-breathing-btn">
+                                <i class="fas fa-play"></i> 开始呼吸练习
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 气候日志页面 -->
+            <section id="log-page" class="page">
+                <div class="section">
+                    <h2 class="section-title">气候日志</h2>
+                    <p class="section-subtitle">过去7天的情绪天气记录</p>
+
+                    <div class="mood-calendar">
+                        <div class="calendar-header">
+                            <div class="week-days">
+                                <div>一</div>
+                                <div>二</div>
+                                <div>三</div>
+                                <div>四</div>
+                                <div>五</div>
+                                <div>六</div>
+                                <div>日</div>
+                            </div>
+                        </div>
+
+                        <div class="mood-grid" id="mood-grid">
+                            <!-- 动态生成情绪网格 -->
+                        </div>
+                    </div>
+
+                    <div class="log-stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="anxiety-count">0</div>
+                            <div class="stat-label">焦虑日</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="emptiness-count">0</div>
+                            <div class="stat-label">空虚日</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="irritability-count">0</div>
+                            <div class="stat-label">烦躁日</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="burnout-count">0</div>
+                            <div class="stat-label">倦怠日</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 设置页面 -->
+            <section id="settings-page" class="page">
+                <div class="section">
+                    <h2 class="section-title">设置</h2>
+
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-icon">🌙</div>
+                                <div>
+                                    <div class="setting-title">深色模式</div>
+                                    <div class="setting-desc">使用柔和的深色界面</div>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="dark-mode-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-icon">🔔</div>
+                                <div>
+                                    <div class="setting-title">每日提醒</div>
+                                    <div class="setting-desc">记录情绪天气</div>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="daily-reminder-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-icon">📊</div>
+                                <div>
+                                    <div class="setting-title">数据备份</div>
+                                    <div class="setting-desc">本地存储，保护隐私</div>
+                                </div>
+                            </div>
+                            <button class="backup-btn" id="backup-btn">备份数据</button>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-icon">ℹ️</div>
+                                <div>
+                                    <div class="setting-title">关于情绪气候站</div>
+                                    <div class="setting-desc">版本 1.0.0</div>
+                                </div>
+                            </div>
+                            <button class="about-btn" id="about-btn">查看详情</button>
+                        </div>
+                    </div>
+
+                    <div class="app-info">
+                        <p>情绪气候站是一个将情绪视为天气系统的心理健康小工具。通过天气隐喻帮助用户觉察和调节情绪状态。</p>
+                        <p class="app-creator">设计灵感来自气象学与正念心理学</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部导航 -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-page="today-page">
+                <div class="nav-icon"><i class="fas fa-cloud-sun"></i></div>
+                <div class="nav-label">今日</div>
+            </button>
+
+            <button class="nav-btn" data-page="log-page">
+                <div class="nav-icon"><i class="fas fa-calendar-alt"></i></div>
+                <div class="nav-label">气候日志</div>
+            </button>
+
+            <button class="nav-btn" data-page="settings-page">
+                <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                <div class="nav-label">设置</div>
+            </button>
+        </nav>
+    </div>
+
+    <!-- 模态框 - 关于 -->
+    <div class="modal hidden" id="about-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>关于情绪气候站</h3>
+                <button class="modal-close" id="close-about-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>情绪气候站是一个基于天气隐喻的心理健康工具，将情绪状态可视化为人格化的天气系统。</p>
+                <p>该应用基于以下理念设计：</p>
+                <ul>
+                    <li>情绪如天气，有变化周期</li>
+                    <li>觉察是调节的第一步</li>
+                    <li>微小的干预可以改变情绪气候</li>
+                </ul>
+                <p>所有数据仅存储在您的设备本地，保护您的隐私安全。</p>
+                <p>版本: 1.0.0<br>更新日期: 2026年4月</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
