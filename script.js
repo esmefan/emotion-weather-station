@@ -11,7 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
         breathingInterval: null,
         currentBreathPhase: 'inhale', // inhale, hold, exhale
         moodHistory: [],
-        currentPage: 'today-page'
+        currentPage: 'today-page',
+        nightMode: false, // 夜间模式状态
+        nightSound: 'waves', // 夜间声音选项：waves, campfire, low-voice
+        nightCountdownInterval: null // 睡眠倒计时计时器
     };
 
     // 情绪数据配置
@@ -78,6 +81,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    // 夜间模式配置
+    const nightModeConfig = {
+        // 夜间声音选项
+        sounds: {
+            waves: { icon: '🌊', label: '海浪声' },
+            campfire: { icon: '🔥', label: '篝火声' },
+            'low-voice': { icon: '👤', label: '低频人声' }
+        },
+        // 夜间微行为
+        nightActions: [
+            '把手机屏幕亮度调到最低，闭上眼睛数三次呼吸',
+            '轻轻按压太阳穴，顺时针按摩五圈',
+            '用枕头支撑后背，坐直深呼吸',
+            '想象自己站在海边，感受海风轻拂',
+            '在心中默念三件今天发生的小事',
+            '轻轻拍打手臂和双腿，像弹去灰尘',
+            '闭上眼睛，想象一颗星星慢慢变亮',
+            '慢慢转动脚踝，左右各五圈',
+            '用手掌轻轻覆盖眼睛，感受温暖',
+            '在心里对自己说一句温柔的话'
+        ],
+        // 守塔人消息
+        watchtowerMessages: [
+            '夜里不太平静也没关系，我在这里陪你到天亮。',
+            '夜晚的海洋深不可测，但灯塔的光总会穿透黑暗。',
+            '星星在云层后闪烁，就像你的呼吸在寂静中起伏。',
+            '风会停歇，雨会止息，我会一直在这里守望。',
+            '深夜的思绪像潮水，来了又会退去，我陪你看它流动。'
+        ]
+    };
+
     // 微行为建议库
     const microActions = [
         '慢慢走去倒一杯水，感受杯子的温度',
@@ -115,11 +149,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // 天气报告部分
         weatherReportSection: document.getElementById('weather-report-section'),
         weatherCard: document.getElementById('weather-card'),
+        watchtowerCard: document.getElementById('watchtower-card'),
         intensityLevels: document.querySelectorAll('.intensity-level'),
         forecastTip: document.getElementById('forecast-tip'),
 
         // 干预面板
         interventionSection: document.getElementById('intervention-section'),
+        sleepCountdown: document.getElementById('sleep-countdown'),
+        countdownTimer: document.getElementById('countdown-timer'),
         soundOptions: document.querySelectorAll('.sound-option'),
         actionPrompt: document.getElementById('action-prompt'),
         refreshActionBtn: document.getElementById('refresh-action-btn'),
@@ -137,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 设置页面
         darkModeToggle: document.getElementById('dark-mode-toggle'),
         dailyReminderToggle: document.getElementById('daily-reminder-toggle'),
+        nightModeToggle: document.getElementById('night-mode-toggle'),
         backupBtn: document.getElementById('backup-btn'),
         aboutBtn: document.getElementById('about-btn'),
 
@@ -145,7 +183,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 模态框
         aboutModal: document.getElementById('about-modal'),
-        closeAboutModal: document.getElementById('close-about-modal')
+        closeAboutModal: document.getElementById('close-about-modal'),
+
+        // 情绪气候图
+        weekTimeline: document.getElementById('week-timeline'),
+        cellDetail: document.getElementById('cell-detail'),
+        detailDate: document.getElementById('detail-date'),
+        detailWeather: document.getElementById('detail-weather'),
+        detailTitle: document.getElementById('detail-title'),
+        detailIntensity: document.getElementById('detail-intensity'),
+        detailAction: document.getElementById('detail-action'),
+        detailClose: document.getElementById('detail-close'),
+        mostFrequentWeather: document.getElementById('most-frequent-weather'),
+        avgIntensity: document.getElementById('avg-intensity'),
+        interventionsCount: document.getElementById('interventions-count')
     };
 
     // ====================
@@ -163,6 +214,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 初始化呼吸动画SVG
         initBreathingWave();
+
+        // 初始化夜间模式
+        initNightMode();
+
+        // 初始化情绪地图
+        initEmotionMap();
 
         // 设置事件监听器
         setupEventListeners();
@@ -191,6 +248,217 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dom.currentTime) {
             dom.currentTime.textContent = `${dateString} ${timeString}`;
         }
+    }
+
+    // 初始化夜间模式
+    function initNightMode() {
+        // 检查当前时间是否在夜间时段 (22:00-06:00)
+        const now = new Date();
+        const currentHour = now.getHours();
+        const isNightTime = currentHour >= 22 || currentHour < 6;
+
+        // 从localStorage加载夜间模式设置
+        const savedNightMode = localStorage.getItem('nightModeEnabled');
+        const nightModeEnabled = savedNightMode !== null ? JSON.parse(savedNightMode) : isNightTime;
+
+        // 更新状态
+        state.nightMode = nightModeEnabled;
+
+        // 更新开关状态
+        if (dom.nightModeToggle) {
+            dom.nightModeToggle.checked = nightModeEnabled;
+        }
+
+        // 应用夜间模式
+        applyNightMode(nightModeEnabled);
+
+        // 如果启用夜间模式，更新睡眠倒计时
+        if (nightModeEnabled) {
+            updateSleepCountdown();
+            // 每分钟更新一次倒计时
+            state.nightCountdownInterval = setInterval(updateSleepCountdown, 60000);
+        }
+    }
+
+    // 应用夜间模式
+    function applyNightMode(enabled) {
+        state.nightMode = enabled;
+
+        // 更新HTML属性以应用CSS变量
+        document.documentElement.setAttribute('data-night-mode', enabled);
+
+        // 显示/隐藏相关元素
+        if (enabled) {
+            // 隐藏普通天气卡片，显示守塔人卡片
+            if (dom.weatherCard) dom.weatherCard.classList.add('hidden');
+            if (dom.watchtowerCard) {
+                dom.watchtowerCard.classList.remove('hidden');
+                // 生成守塔人卡片内容
+                generateWatchtowerCard();
+            }
+            // 显示睡眠倒计时
+            if (dom.sleepCountdown) dom.sleepCountdown.classList.remove('hidden');
+            // 更新干预选项为夜间版本
+            updateInterventionsForNight();
+        } else {
+            // 显示普通天气卡片，隐藏守塔人卡片
+            if (dom.weatherCard) dom.weatherCard.classList.remove('hidden');
+            if (dom.watchtowerCard) dom.watchtowerCard.classList.add('hidden');
+            // 隐藏睡眠倒计时
+            if (dom.sleepCountdown) dom.sleepCountdown.classList.add('hidden');
+            // 恢复日间干预选项
+            restoreDayInterventions();
+        }
+
+        // 保存设置
+        localStorage.setItem('nightModeEnabled', JSON.stringify(enabled));
+    }
+
+    // 生成守塔人卡片
+    function generateWatchtowerCard() {
+        if (!dom.watchtowerCard) return;
+
+        // 随机选择一条守塔人消息
+        const messages = nightModeConfig.watchtowerMessages;
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+        // 生成SVG灯塔
+        const lighthouseSVG = `
+            <svg class="watchtower-lighthouse" viewBox="0 0 60 100">
+                <!-- 灯塔底座 -->
+                <rect class="lighthouse-base" x="20" y="75" width="20" height="25" rx="3"/>
+                <!-- 灯塔塔身 -->
+                <rect class="lighthouse-tower" x="22" y="15" width="16" height="60" rx="3"/>
+                <!-- 灯塔顶部 -->
+                <circle class="lighthouse-light" cx="30" cy="20" r="8"/>
+                <!-- 光晕效果 -->
+                <circle class="lighthouse-glow" cx="30" cy="20" r="15"/>
+            </svg>
+        `;
+
+        // 生成卡片HTML
+        const cardHTML = `
+            ${lighthouseSVG}
+            <div class="watchtower-message">${randomMessage}</div>
+            <div class="watchtower-quote">—— 夜间守塔人</div>
+        `;
+
+        dom.watchtowerCard.innerHTML = cardHTML;
+    }
+
+    // 更新睡眠倒计时
+    function updateSleepCountdown() {
+        if (!dom.countdownTimer) return;
+
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(7, 0, 0, 0); // 明天早上7点
+
+        // 如果现在已经是早上7点之后，则计算今天早上7点
+        if (now.getHours() >= 7) {
+            const todayMorning = new Date(now);
+            todayMorning.setHours(7, 0, 0, 0);
+            if (now > todayMorning) {
+                // 已经是今天7点之后，计算明天7点
+                tomorrow.setDate(tomorrow.getDate() + 1);
+            }
+        }
+
+        const timeDiff = tomorrow - now;
+        const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+        // 格式化显示
+        const formattedHours = hours.toString().padStart(2, '0');
+        const formattedMinutes = minutes.toString().padStart(2, '0');
+
+        dom.countdownTimer.textContent = `${formattedHours}:${formattedMinutes}`;
+    }
+
+    // 更新干预选项为夜间版本
+    function updateInterventionsForNight() {
+        // 更新声音选项
+        if (dom.soundOptions && dom.soundOptions.length > 0) {
+            const nightSounds = nightModeConfig.sounds;
+
+            // 海浪声
+            if (dom.soundOptions[0]) {
+                dom.soundOptions[0].querySelector('.sound-icon').textContent = nightSounds.waves.icon;
+                dom.soundOptions[0].querySelector('.sound-label').textContent = nightSounds.waves.label;
+                dom.soundOptions[0].dataset.sound = 'waves';
+            }
+
+            // 篝火声
+            if (dom.soundOptions[1]) {
+                dom.soundOptions[1].querySelector('.sound-icon').textContent = nightSounds.campfire.icon;
+                dom.soundOptions[1].querySelector('.sound-label').textContent = nightSounds.campfire.label;
+                dom.soundOptions[1].dataset.sound = 'campfire';
+            }
+
+            // 低频人声
+            if (dom.soundOptions[2]) {
+                dom.soundOptions[2].querySelector('.sound-icon').textContent = nightSounds['low-voice'].icon;
+                dom.soundOptions[2].querySelector('.sound-label').textContent = nightSounds['low-voice'].label;
+                dom.soundOptions[2].dataset.sound = 'low-voice';
+            }
+        }
+
+        // 更新微行为为夜间版本
+        setRandomNightAction();
+    }
+
+    // 恢复日间干预选项
+    function restoreDayInterventions() {
+        // 恢复声音选项
+        if (dom.soundOptions && dom.soundOptions.length > 0) {
+            // 雨声
+            if (dom.soundOptions[0]) {
+                dom.soundOptions[0].querySelector('.sound-icon').textContent = '🌧️';
+                dom.soundOptions[0].querySelector('.sound-label').textContent = '雨声';
+                dom.soundOptions[0].dataset.sound = 'rain';
+            }
+
+            // 电台白噪音
+            if (dom.soundOptions[1]) {
+                dom.soundOptions[1].querySelector('.sound-icon').textContent = '📻';
+                dom.soundOptions[1].querySelector('.sound-label').textContent = '电台白噪音';
+                dom.soundOptions[1].dataset.sound = 'white-noise';
+            }
+
+            // 低语人声
+            if (dom.soundOptions[2]) {
+                dom.soundOptions[2].querySelector('.sound-icon').textContent = '👥';
+                dom.soundOptions[2].querySelector('.sound-label').textContent = '低语人声';
+                dom.soundOptions[2].dataset.sound = 'whisper';
+            }
+        }
+
+        // 恢复日间微行为
+        setRandomAction();
+    }
+
+    // 设置随机夜间微行为
+    function setRandomNightAction() {
+        const actions = nightModeConfig.nightActions;
+        const randomIndex = Math.floor(Math.random() * actions.length);
+        const action = actions[randomIndex];
+
+        if (dom.actionPrompt) {
+            dom.actionPrompt.textContent = action;
+        }
+    }
+
+    // 初始化情绪地图
+    function initEmotionMap() {
+        // 生成周时间线
+        generateWeekTimeline();
+
+        // 更新每周总结
+        updateWeeklySummary();
+
+        // 设置单元格点击事件
+        setupCellClickEvents();
     }
 
     // ====================
@@ -258,6 +526,25 @@ document.addEventListener('DOMContentLoaded', function() {
         // 备份按钮
         if (dom.backupBtn) {
             dom.backupBtn.addEventListener('click', backupData);
+        }
+
+        // 夜间模式切换
+        if (dom.nightModeToggle) {
+            dom.nightModeToggle.addEventListener('change', function() {
+                const enabled = this.checked;
+                applyNightMode(enabled);
+
+                // 如果启用夜间模式，启动倒计时；如果禁用，清除倒计时
+                if (enabled) {
+                    updateSleepCountdown();
+                    state.nightCountdownInterval = setInterval(updateSleepCountdown, 60000);
+                } else {
+                    if (state.nightCountdownInterval) {
+                        clearInterval(state.nightCountdownInterval);
+                        state.nightCountdownInterval = null;
+                    }
+                }
+            });
         }
     }
 
@@ -389,9 +676,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // 干预面板功能
     // ====================
     function setRandomAction() {
-        const randomIndex = Math.floor(Math.random() * microActions.length);
-        const action = microActions[randomIndex];
-        dom.actionPrompt.textContent = action;
+        let action;
+
+        if (state.nightMode) {
+            // 夜间模式使用夜间微行为
+            const randomIndex = Math.floor(Math.random() * nightModeConfig.nightActions.length);
+            action = nightModeConfig.nightActions[randomIndex];
+        } else {
+            // 日间模式使用普通微行为
+            const randomIndex = Math.floor(Math.random() * microActions.length);
+            action = microActions[randomIndex];
+        }
+
+        if (dom.actionPrompt) {
+            dom.actionPrompt.textContent = action;
+        }
     }
 
     function initBreathingWave() {
@@ -686,10 +985,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // 更新状态
         state.currentPage = pageId;
 
-        // 如果切换到日志页面，更新网格
+        // 如果切换到日志页面，更新网格和情绪地图
         if (pageId === 'log-page') {
             renderMoodGrid();
             updateStats();
+            generateWeekTimeline();
+            updateWeeklySummary();
         }
     }
 
@@ -715,6 +1016,232 @@ document.addEventListener('DOMContentLoaded', function() {
         URL.revokeObjectURL(url);
 
         alert('数据备份已下载！');
+    }
+
+    // ====================
+    // 情绪地图功能
+    // ====================
+
+    // 生成周时间线
+    function generateWeekTimeline() {
+        if (!dom.weekTimeline) return;
+
+        // 清空现有内容
+        dom.weekTimeline.innerHTML = '';
+
+        // 获取最近7天的数据
+        const today = new Date();
+        const weekData = [];
+
+        // 生成最近7天的数据（包括今天）
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateString = date.toISOString().split('T')[0];
+
+            // 查找当天的情绪记录
+            const moodEntry = state.moodHistory.find(entry => entry.date === dateString);
+            const emotion = moodEntry ? moodEntry.emotion : 'none';
+            const intensity = moodEntry ? moodEntry.intensity : 0;
+
+            // 获取微行为（如果有的话，使用第一条记录）
+            const action = moodEntry ? getRandomActionForDay(dateString) : '暂无记录';
+
+            weekData.push({
+                date: date,
+                dateString: dateString,
+                emotion: emotion,
+                intensity: intensity,
+                action: action,
+                dayOfWeek: getDayOfWeekChinese(date.getDay())
+            });
+        }
+
+        // 生成单元格
+        weekData.forEach((dayData, index) => {
+            const cell = document.createElement('div');
+            cell.className = `weather-cell ${dayData.emotion}`;
+            cell.dataset.index = index;
+            cell.dataset.date = dayData.dateString;
+            cell.dataset.emotion = dayData.emotion;
+            cell.dataset.intensity = dayData.intensity;
+            cell.dataset.action = dayData.action;
+
+            // 添加日期标签
+            const dateLabel = document.createElement('div');
+            dateLabel.className = 'cell-date';
+            dateLabel.textContent = `${dayData.date.getDate()}日`;
+
+            cell.appendChild(dateLabel);
+            dom.weekTimeline.appendChild(cell);
+        });
+    }
+
+    // 获取星期几的中文名称
+    function getDayOfWeekChinese(dayIndex) {
+        const days = ['日', '一', '二', '三', '四', '五', '六'];
+        return days[dayIndex];
+    }
+
+    // 获取某天的随机微行为（模拟数据）
+    function getRandomActionForDay(dateString) {
+        // 在实际应用中，这里应该从历史数据中获取
+        // 现在使用模拟数据
+        const actions = [
+            '慢慢走去倒一杯水，感受杯子的温度',
+            '站在窗前深呼吸三次，观察窗外的一处细节',
+            '轻轻按摩双手每个手指，感受触感',
+            '闭上眼睛，倾听周围的三种声音',
+            '慢慢拉伸颈部，左右各保持5秒',
+            '用手指在桌面画一个完整的圆',
+            '注意自己的呼吸节奏，不要改变它'
+        ];
+        return actions[Math.floor(Math.random() * actions.length)];
+    }
+
+    // 设置单元格点击事件
+    function setupCellClickEvents() {
+        if (!dom.weekTimeline) return;
+
+        // 使用事件委托处理单元格点击
+        dom.weekTimeline.addEventListener('click', function(e) {
+            const cell = e.target.closest('.weather-cell');
+            if (!cell) return;
+
+            // 移除其他单元格的active类
+            document.querySelectorAll('.weather-cell').forEach(c => {
+                c.classList.remove('active');
+            });
+
+            // 添加active类到当前单元格
+            cell.classList.add('active');
+
+            // 显示详情
+            showCellDetail(cell);
+        });
+
+        // 详情关闭按钮
+        if (dom.detailClose) {
+            dom.detailClose.addEventListener('click', function() {
+                dom.cellDetail.classList.add('hidden');
+                // 移除所有单元格的active状态
+                document.querySelectorAll('.weather-cell').forEach(c => {
+                    c.classList.remove('active');
+                });
+            });
+        }
+    }
+
+    // 显示单元格详情
+    function showCellDetail(cell) {
+        if (!dom.cellDetail || !cell) return;
+
+        const dateStr = cell.dataset.date;
+        const emotion = cell.dataset.emotion;
+        const intensity = cell.dataset.intensity;
+        const action = cell.dataset.action;
+
+        // 解析日期
+        const date = new Date(dateStr + 'T00:00:00');
+        const dateFormatted = date.toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
+        });
+
+        // 获取情绪信息
+        const emotionData = emotions[emotion];
+
+        // 更新详情内容
+        dom.detailDate.textContent = dateFormatted;
+
+        if (emotionData) {
+            // 有情绪记录的情况
+            dom.detailWeather.innerHTML = `
+                <div class="detail-icon">${emotionData.icon}</div>
+                <div class="detail-info">
+                    <div class="detail-title">${emotionData.weatherTitle}</div>
+                    <div class="detail-intensity">强度: ${intensity}/5</div>
+                </div>
+            `;
+            dom.detailTitle.textContent = emotionData.weatherTitle;
+            dom.detailIntensity.textContent = `强度: ${intensity}/5`;
+        } else {
+            // 无记录的情况
+            dom.detailWeather.innerHTML = `
+                <div class="detail-icon">🌤️</div>
+                <div class="detail-info">
+                    <div class="detail-title">晴间多云</div>
+                    <div class="detail-intensity">未记录情绪</div>
+                </div>
+            `;
+            dom.detailTitle.textContent = '晴间多云';
+            dom.detailIntensity.textContent = '未记录情绪';
+        }
+
+        dom.detailAction.innerHTML = `
+            <div class="detail-action-label">当日微行为:</div>
+            <div class="detail-action-text">${action}</div>
+        `;
+
+        // 显示详情面板
+        dom.cellDetail.classList.remove('hidden');
+    }
+
+    // 更新每周总结
+    function updateWeeklySummary() {
+        if (!dom.mostFrequentWeather || !dom.avgIntensity || !dom.interventionsCount) return;
+
+        // 获取最近7天的数据
+        const today = new Date();
+        const weekData = [];
+
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateString = date.toISOString().split('T')[0];
+
+            const moodEntry = state.moodHistory.find(entry => entry.date === dateString);
+            if (moodEntry) {
+                weekData.push(moodEntry);
+            }
+        }
+
+        // 计算统计数据
+        const emotionCounts = {};
+        let totalIntensity = 0;
+        let recordedDays = 0;
+
+        weekData.forEach(entry => {
+            // 统计情绪频率
+            emotionCounts[entry.emotion] = (emotionCounts[entry.emotion] || 0) + 1;
+            // 累计强度
+            totalIntensity += entry.intensity;
+            recordedDays++;
+        });
+
+        // 找出最常见的情绪
+        let mostFrequentEmotion = '无记录';
+        let maxCount = 0;
+
+        Object.entries(emotionCounts).forEach(([emotion, count]) => {
+            if (count > maxCount) {
+                maxCount = count;
+                mostFrequentEmotion = emotions[emotion]?.name || emotion;
+            }
+        });
+
+        // 计算平均强度
+        const avgIntensity = recordedDays > 0 ? (totalIntensity / recordedDays).toFixed(1) : '0.0';
+
+        // 干预完成次数（模拟数据）
+        const interventionsCount = Math.floor(Math.random() * 15) + 5; // 5-19次
+
+        // 更新DOM
+        dom.mostFrequentWeather.textContent = mostFrequentEmotion;
+        dom.avgIntensity.textContent = avgIntensity;
+        dom.interventionsCount.textContent = interventionsCount;
     }
 
     // ====================

@@ -69,6 +69,11 @@
                         <!-- 动态生成天气卡片 -->
                     </div>
 
+                    <!-- 夜间守塔人卡片 (初始隐藏) -->
+                    <div class="watchtower-card hidden" id="watchtower-card">
+                        <!-- 动态生成守塔人卡片 -->
+                    </div>
+
                     <div class="intensity-section">
                         <h3 class="intensity-title">气候强度</h3>
                         <div class="intensity-meter">
@@ -96,6 +101,16 @@
                 <div class="section intervention-section hidden" id="intervention-section">
                     <h2 class="section-title">气候干预方案</h2>
                     <p class="section-subtitle">选择适合你的调节方式</p>
+
+                    <!-- 睡眠倒计时 (仅在夜间模式显示) -->
+                    <div class="sleep-countdown hidden" id="sleep-countdown">
+                        <div class="countdown-icon">🌙</div>
+                        <div class="countdown-text">
+                            <div class="countdown-title">睡眠倒计时</div>
+                            <div class="countdown-timer" id="countdown-timer">--:--</div>
+                            <div class="countdown-subtitle">距离早晨7点还有</div>
+                        </div>
+                    </div>
 
                     <div class="intervention-grid">
                         <!-- 声音推荐 -->
@@ -190,6 +205,66 @@
                             <div class="stat-label">倦怠日</div>
                         </div>
                     </div>
+
+                    <!-- 情绪气候图 -->
+                    <div class="section emotion-map-section">
+                        <h2 class="section-title">情绪气候图</h2>
+                        <p class="section-subtitle">本周情绪天气趋势</p>
+
+                        <!-- 周时间线 -->
+                        <div class="week-timeline" id="week-timeline">
+                            <!-- 动态生成7天单元格 -->
+                        </div>
+
+                        <!-- 单元格详情 (初始隐藏) -->
+                        <div class="cell-detail hidden" id="cell-detail">
+                            <div class="detail-header">
+                                <div class="detail-date" id="detail-date">2026年4月14日 周一</div>
+                                <button class="detail-close" id="detail-close">&times;</button>
+                            </div>
+                            <div class="detail-content">
+                                <div class="detail-weather" id="detail-weather">
+                                    <div class="detail-icon">🌩️</div>
+                                    <div class="detail-info">
+                                        <div class="detail-title" id="detail-title">雷暴焦虑</div>
+                                        <div class="detail-intensity" id="detail-intensity">强度: 3/5</div>
+                                    </div>
+                                </div>
+                                <div class="detail-action" id="detail-action">
+                                    <div class="detail-action-label">当日微行为:</div>
+                                    <div class="detail-action-text">慢慢走去倒一杯水，感受杯子的温度</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 本周气候总结 -->
+                        <div class="weekly-summary">
+                            <h3 class="summary-title">本周气候总结</h3>
+                            <div class="summary-stats">
+                                <div class="summary-stat">
+                                    <div class="stat-icon">📊</div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="most-frequent-weather">焦虑</div>
+                                        <div class="stat-label">最常见天气</div>
+                                    </div>
+                                </div>
+                                <div class="summary-stat">
+                                    <div class="stat-icon">⚡</div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="avg-intensity">3.2</div>
+                                        <div class="stat-label">平均强度</div>
+                                    </div>
+                                </div>
+                                <div class="summary-stat">
+                                    <div class="stat-icon">✅</div>
+                                    <div class="stat-info">
+                                        <div class="stat-value" id="interventions-count">12</div>
+                                        <div class="stat-label">干预完成</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -223,6 +298,20 @@
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="daily-reminder-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-icon">🌙</div>
+                                <div>
+                                    <div class="setting-title">夜间守塔人模式</div>
+                                    <div class="setting-desc">22:00-06:00自动激活</div>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="night-mode-toggle">
                                 <span class="slider"></span>
                             </label>
                         </div>

@@ -67,6 +67,19 @@
     --font-size-xxl: 32px;
 }
 
+/* 夜间模式变量 */
+[data-night-mode="true"] {
+    --bg-primary: #050811;
+    --bg-secondary: #0a101f;
+    --bg-tertiary: #0f1526;
+    --bg-card: #141a2b;
+    --border-color: #1d2438;
+    --text-primary: #d8dee9;
+    --text-secondary: #8a93b0;
+    --text-tertiary: #5a6380;
+    --accent-color: #6366f1; /* 更冷的靛蓝色 */
+}
+
 /* 重置和基础样式 */
 * {
     margin: 0;
@@ -323,6 +336,86 @@ body {
     background: linear-gradient(135deg, rgba(56, 178, 172, 0.1), var(--bg-card));
 }
 
+/* 守塔人卡片 */
+.watchtower-card {
+    background: linear-gradient(135deg, #0a1229, #141a2b);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    border-left: 6px solid #6366f1;
+    box-shadow: var(--shadow-md);
+    animation: fadeIn 0.8s ease-out;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.watchtower-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
+    animation: lighthouse-sweep 8s linear infinite;
+}
+
+@keyframes lighthouse-sweep {
+    0% { transform: translateX(-100%) translateY(-100%); }
+    100% { transform: translateX(100%) translateY(100%); }
+}
+
+.watchtower-lighthouse {
+    width: 60px;
+    height: 100px;
+    margin: 0 auto var(--spacing-lg);
+    position: relative;
+}
+
+.lighthouse-base {
+    fill: #4b5563;
+}
+
+.lighthouse-tower {
+    fill: #6b7280;
+}
+
+.lighthouse-light {
+    fill: #fbbf24;
+    animation: lighthouse-blink 3s ease-in-out infinite;
+    opacity: 0.8;
+}
+
+@keyframes lighthouse-blink {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.3; }
+}
+
+.lighthouse-glow {
+    fill: rgba(251, 191, 36, 0.2);
+    animation: lighthouse-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes lighthouse-glow-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+.watchtower-message {
+    font-size: var(--font-size-lg);
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    font-style: italic;
+}
+
+.watchtower-quote {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: 300;
+}
+
 .weather-header {
     display: flex;
     align-items: center;
@@ -435,6 +528,47 @@ body {
 }
 
 /* 干预面板 */
+
+/* 睡眠倒计时 */
+.sleep-countdown {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    animation: pulse 3s infinite ease-in-out;
+}
+
+.countdown-icon {
+    font-size: 32px;
+    margin-right: var(--spacing-md);
+}
+
+.countdown-text {
+    flex: 1;
+}
+
+.countdown-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.countdown-timer {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: #6366f1;
+    margin-bottom: var(--spacing-xs);
+}
+
+.countdown-subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
 .intervention-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -1125,4 +1259,255 @@ input:checked + .slider:before {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-tertiary);
+}
+
+/* 情绪气候图 */
+.emotion-map-section {
+    margin-top: var(--spacing-xl);
+}
+
+.week-timeline {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0;
+    overflow-x: auto;
+    padding-bottom: var(--spacing-sm);
+}
+
+.weather-cell {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 为每个单元格添加延迟动画 */
+.weather-cell:nth-child(1) { animation-delay: 0.1s; }
+.weather-cell:nth-child(2) { animation-delay: 0.2s; }
+.weather-cell:nth-child(3) { animation-delay: 0.3s; }
+.weather-cell:nth-child(4) { animation-delay: 0.4s; }
+.weather-cell:nth-child(5) { animation-delay: 0.5s; }
+.weather-cell:nth-child(6) { animation-delay: 0.6s; }
+.weather-cell:nth-child(7) { animation-delay: 0.7s; }
+
+.weather-cell:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px currentColor;
+}
+
+.weather-cell.active {
+    transform: scale(1.1);
+    box-shadow: 0 0 16px currentColor;
+    border: 2px solid white;
+}
+
+.weather-cell.anxiety {
+    background-color: var(--anxiety-color);
+    box-shadow: 0 0 8px rgba(109, 103, 228, 0.5);
+}
+
+.weather-cell.emptiness {
+    background-color: var(--emptiness-color);
+    box-shadow: 0 0 8px rgba(139, 149, 179, 0.5);
+}
+
+.weather-cell.irritability {
+    background-color: var(--irritability-color);
+    box-shadow: 0 0 8px rgba(255, 154, 60, 0.5);
+}
+
+.weather-cell.burnout {
+    background-color: var(--burnout-color);
+    box-shadow: 0 0 8px rgba(56, 178, 172, 0.5);
+}
+
+.weather-cell.none {
+    background-color: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+}
+
+.cell-date {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* 单元格详情 */
+.cell-detail {
+    background-color: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    animation: fadeIn 0.3s ease;
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-date {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.detail-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: var(--spacing-xs);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.detail-close:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.detail-weather {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.detail-icon {
+    font-size: 32px;
+}
+
+.detail-info {
+    flex: 1;
+}
+
+.detail-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.detail-intensity {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.detail-action {
+    background-color: var(--bg-tertiary);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-md);
+}
+
+.detail-action-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.detail-action-text {
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+/* 本周气候总结 */
+.weekly-summary {
+    background-color: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+    border-top: 4px solid var(--accent-color);
+}
+
+.summary-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 480px) {
+    .summary-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+.summary-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--bg-card);
+    border-radius: var(--border-radius-sm);
+}
+
+.stat-icon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(99, 102, 241, 0.1);
+    border-radius: 50%;
+    color: var(--accent-color);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
 }
